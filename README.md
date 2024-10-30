@@ -64,8 +64,8 @@ CoAP defines four types of messages:
 - 3.Token Length (TKL): 4-bit integer, indicates the Token length (0-8 bytes).
   
 
-- 4.Code: 8-bit integer, representing the method or response.
-
+- 4.Code: 8-bit integer, representing the method or response. This holds the type of method/the type of response for the message sent by the client, respectively the server.
+  
 - 5.Message ID: 16-bit integer to identify messages.
 - 6.Token:
 
@@ -121,7 +121,7 @@ CoAp operates similarly to HTTP, where an endpoint playing the role of a client 
    
    A response is identified by the Code field in the CoAP header being set to a Response Code which indicates the result of the server's attempt to deal with the request.
 
-   The response code is composed of 8 bits, with the upper three representing the class of the response and the lower 5 bits providing details about the overall class. 
+   The response code is composed of 8 bits, with the upper three representing the class of the response and the lower 5 bits providing details about the overall class (if the message is a request sent by the client this field hold the specific method's codification). 
 
    The three classes of response codes are:
 
@@ -159,6 +159,20 @@ CoAp operates similarly to HTTP, where an endpoint playing the role of a client 
 
 ### Types of responses:
 
-- 1.Piggybacked:
+- Piggybacked:
+  
+  In the basic scenario, the response is carried with the Acknowledgement Message that acknowledges a request for a Confirmable Message. The request is sent as one, with the response piggybacked on the Acknowledgement message, even if the response indicates a failure.
+
+   This type of response is often used due to it's ability to save network resources as it avoids sending two messages for confirmation and fulfilling the actual request.
+
+-  Separate:
+   
+   It may not be possible to return a piggybacked response in all cases, as a server might, for example, take longer to obtain the resource requested and send back the acknowledgement message than the client can wait until it resends the request message. This means that the the request was of the CON type, as the response to a request carried in a Non-confirmable message is always sent separately.
+
+   One way to implement this in a server is to initiate the attempt to obtain the resource representation and, while that is in progress, configure an acknowledgement timer (to track and regulate the delay between the ACK and the eventual response). A server may also immediately send an acknowledgement if it knows in advance that there will be no piggybacked response. In both cases, the acknowledgement effectively is a promise that the request will be acted upon later.
+
+   When the server chooses to use a separate response, it sends the Acknowledgement to the Confirmable request as an Empty message. Once this is sent, another Acknowledgement message must not be sent, even if the client retransmits another identical request. If this happens, another Empty Acknowledgement is sent, and any response must be sent as a separate response (ensuring that the client doesn't receive a duplicate response).
+
+   The protocol leaves the decision whether to piggyback a response or not to the server. The client must be prepared to receive either.
 
 

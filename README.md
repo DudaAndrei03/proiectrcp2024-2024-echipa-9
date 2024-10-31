@@ -16,7 +16,7 @@ The Constrained Application Protocol (CoAP) is a specialized web
 
 ## Features
 
-Web protocol fulfilling M2M (Machine to Machine) requirements in constrained environments
+- Web protocol fulfilling M2M (Machine to Machine) requirements in constrained environments
 
 - UDP binding with optional reliability supporting unicast and multicast requests.
 

@@ -79,6 +79,8 @@ CoAP defines four types of messages:
 
   Depending on the type of message sent and on the type of the response, the payload can be carried togheter with the acknowledgement or separately. This means that, if the message sent was a confirmable one, the acknowledgement message that acknowledges the request carries the actual data as well. If the message is non-confirmable, no acknowledgement message is sent.
 
+  Depending on the implementation, actions such as a request for a file, for example, could be implemented either with the help of a binary codification (encoding/decoding strings with the help of Python functions) or by usin a file format such as JSON.
+
 - 8.Options: 
 
   CoAp defines a number of options that can be included in a message, with each option instance being determined by the Option Number of the specific CoAp option,the length of the Option Value, and the actual Option Value (a sequence of exactly Option Length bytes with the length and format of the Option Value depending on the respective option).
@@ -174,5 +176,54 @@ CoAp operates similarly to HTTP, where an endpoint playing the role of a client 
    When the server chooses to use a separate response, it sends the Acknowledgement to the Confirmable request as an Empty message. Once this is sent, another Acknowledgement message must not be sent, even if the client retransmits another identical request. If this happens, another Empty Acknowledgement is sent, and any response must be sent as a separate response (ensuring that the client doesn't receive a duplicate response).
 
    The protocol leaves the decision whether to piggyback a response or not to the server. The client must be prepared to receive either.
+
+## Methods:
+ 
+- #### GET:
+
+   The GET method retrieves a representation for the information that currently corresponds to the command contained in the request's payload. This can be identified by the first 3 bits of the Code field in a message sent by the client, and should be upon succes answered with a 2.05 Content code. The payload could hold a binary codification of a file's name (that the client wishes to get/download) or the codification of a specific word that details the client's request. Another possibility would be to hold a standard file format (such as a JSON) that will be interpreted by the server which will search for the file requested and send it to the client.
+
+   
+- #### POST:
+
+   The POST method requests that the representation enclosed in the request be processed. The actual function performed by the POST method is determined by the server's implementation and by the target resource. Usually, this means that the server's data is updated or a new file (resource) is created. For example, the request's payload could hold the codification of a specific word combined with a file name, which will prompt the server to create that specific file.
+
+
+## Sequence Example
+
+
+```
+ 0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | 1 | 0 |   0   |     GET=1     |          MID=0x7d34           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  11   |  11   |      "temperature" (11 B) ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | 1 | 2 |   0   |    2.05=69    |          MID=0x7d34           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |1 1 1 1 1 1 1 1|      "22.3 C" (6 B) ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+
+ Client  Server
+      |      |
+      |      |
+      +----->|     Header: GET (T=CON, Code=0.01, MID=0x7d34)
+      | GET  |   Uri-Path: "temperature"
+      |      |
+      |      |
+      |<-----+     Header: 2.05 Content (T=ACK, Code=2.05, MID=0x7d34)
+      | 2.05 |    Payload: "22.3 C"
+      |      |
+                  
+```
+
+This is an example of a CoAp interaction with a Confirmable Message and a Piggybacked Response, where the client request's a resource (the temperature) and the server replies in the same Acknowledgement Message with a succes code and the actual resource requested.
 
 

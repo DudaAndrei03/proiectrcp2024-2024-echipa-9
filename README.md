@@ -226,4 +226,5 @@ CoAp operates similarly to HTTP, where an endpoint playing the role of a client 
 
 This is an example of a CoAp interaction with a Confirmable Message and a Piggybacked Response, where the client request's a resource (the temperature) and the server replies in the same Acknowledgement Message with a succes code and the actual resource requested.
 
+![image](https://github.com/user-attachments/assets/e8cdf20d-5f46-432a-8e94-b073e76b2e70)
 

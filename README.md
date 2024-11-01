@@ -39,7 +39,7 @@ CoAP defines four types of messages:
 ## Request/Response Model
 - Message Format: CoAP is based on the exchange of compact messages that, by default, are transported over UDP.
 
-- __CoAP messages carry requests and responses__ in a binary format, including method codes like __GET__, __PUT__, __POST__, __DELETE__ , and a specialized method, **JOMAG4**.
+- __CoAP messages carry requests and responses__ in a binary format, including method codes like __GET__, __PUT__, __POST__, __DELETE__ , and a specialized method.
 
 
 ```

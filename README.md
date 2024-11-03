@@ -216,11 +216,11 @@ CoAp operates similarly to HTTP, where an endpoint playing the role of a client 
 
 This is an example of a CoAp interaction with a Confirmable Message and a Piggybacked Response, where the client requests a resource (the temperature) and the server replies in the same Acknowledgement Message with a succes code and the actual resource requested.
 
-## Application structure
+## Application Structure
 
 ![image](https://github.com/user-attachments/assets/ac3670ba-b52b-4220-b66a-eb40ca16a451)
 
-
+### Description of the Application Structure
 - The Main Thread which holds the main server's process is dedicated to receiving requests from clients. The thread is constantly waiting for clients to connect and uses the accept() function to establish said connection. This means that, after the thread is started (the application is launched), a new thread instance is created for every client/request sent by an already connected client. A multithreading approach is essential for a performant application that can manage multiple requests at once, as it allows for a concurrent processing of all the requests received, thus improving performance and eliminating the need for a single, serial communication on a single thread.
 - The Client Thread is present in multiple instances, one for every connection the server receives, connection for which it launches a new thread. From this point, they will act independently, treating each request in parallel. As a result, every thread will perform it's specific action, following the main pattern of checking for bad/invalid requests and generating specific responses for every different request sent by the client.
 - The Request Queue is used to provide stability to the server, by queueing every request found on every thread to make sure that each one is safely treated. Every request will be put in the queue, and every thread will extract a request and resolve it depending on it's necesities.

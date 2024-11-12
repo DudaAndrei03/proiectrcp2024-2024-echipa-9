@@ -189,6 +189,26 @@ CoAp operates similarly to HTTP, where an endpoint playing the role of a client 
    The POST method requests that the representation enclosed in the request be processed. The actual function performed by the POST method is determined by the server's implementation and by the target resource. Usually, this means that the server's data is updated or a new file (resource) is created. For example, the request's payload could hold the codification of a specific word combined with a file name, which will prompt the server to create that specific file.
 
 
+
+- #### ALL CLIENT'S CODIFICATIONS FOR REQUESTS:
+
+
+```
+
+                       | Code | Name   | 
+                       +------+--------+
+                       | 0.01 | GET    | 
+                       | 0.02 | POST   |
+                       | 0.03 | PUT    | 
+                       | 0.04 | DELETE |
+                       +------+--------+
+
+```
+
+
+   
+
+
 ## Sequence Example
 
 

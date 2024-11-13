@@ -1,5 +1,6 @@
 import socket
 import json
+import struct
 
 
 
@@ -13,10 +14,31 @@ class CoAPClient:
 
 
     def send_request(self,filename,content):
+
+        version = 1#la << voi shifta 00000001
+        message_type = 1
+        token_length = 4
+        #-
+        code = 1  # GET request in CoAP
+        message_id = 16
+        token = b'\xA1\xB2\xC3\xD4'
+        payload_marker=b'\xFF'
+
+        first_byte = (version << 6) | (message_type << 4) | token_length
+
+        #Primii 4 bytes impachetati (header)
+        header = struct.pack("!BBH",
+                             first_byte,
+                             code,
+                             message_id)
+
+
+        message=header+token+payload_marker
         data = json.dumps({'filename' : filename, 'content' : content}).encode('utf-8')
+        #data->payload
         #converteste string-ul cu format standardizat de tip JSON catre bytes pentru a putea fi transmis la server
 
-        self.client_socket.sendto(data,(self.server_host,self.server_port))
+        self.client_socket.sendto(message,(self.server_host,self.server_port))
 
         try:
             response,server_address = self.client_socket.recvfrom(4096)

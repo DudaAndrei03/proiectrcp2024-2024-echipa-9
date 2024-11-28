@@ -5,6 +5,9 @@ import threading
 import json
 import os
 from idlelib.run import handle_tk_events
+from turtledemo.penrose import start
+
+from functions import read_file, rename_file, create_file, create_dir, generate_code
 
 """ Server : 
 
@@ -95,11 +98,13 @@ class CoAPServer:
             response = {'error': 'Invalid JSON format'}
             self.send_response(client_address, 400, response)
 
-    def send_response(self, client_address, status_code, response):
+    def send_response(self, client_address,message,response):
         # Pregătește răspunsul
         response_data = json.dumps(response).encode('utf-8')
-        # Trimite răspunsul clientului
-        self.server_socket.sendto(response_data, client_address)
+
+        message+=response_data
+        # Trimite răspunsul clientulu
+        self.server_socket.sendto(message, client_address)
 
     def run(self):
         print("Serverul este acum activ.")
@@ -172,39 +177,87 @@ class CoAPServer:
                     raise PayloadMarkerMissingError("Message payload marker is null, but the payload is not empty.")
                     #print("Message payload marker respects the format but the payload is empty!")
 
-
-
-            print(payload)
-            # Decodează datele JSON primite
+            #Deocodez JSON
             request = json.loads(payload.decode('utf-8'))
-            filename = request.get('filename')
-            content = request.get('content')
+            category = request.get('CATEGORY') #2 val-FILE sau DIR
+            op = request.get('OP')
+            param1=request.get('PARAM1')
+            param2=request.get('PARAM2')
 
-            # Verifică dacă fișierul și conținutul sunt specificate
-            if not filename or not content:
-                response = {'error': 'Invalid request'}
-                self.send_response(client_address, 400, response)
-                return
+            method=message.code
+            if method==1: #GET
+                if category=='FILE': #pe get,fle singura operatie e download, nu mai verific
+                    content=read_file(self.base_dir,param1)
+                    status_code=generate_code(method,content)
+                    response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut fisier','PARAM2':content}
 
-            file_path = os.path.join(self.base_dir, filename)
+                elif category=='DIRECTORY':
+                    content_dir=os.listdir(self.base_dir) #lista de string-uri ce reprezinta fisierele
+                    response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut director','PARAM2':content_dir}
 
-            # Verifică dacă fișierul există deja
-            if os.path.exists(file_path):
-                response = {'error': 'File already exists'}
-                self.send_response(client_address, 409, response)
-                return
+            elif method==2: #POST->urmeaza restul de implementari
+                if category=='FILE':
+                    if op=='RENAME':
+                        status=rename_file(param1,param2)
+                        status_code=generate_code(method,status)
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Redenumire',
+                                    'PARAM2': None}
 
-            # Creează fișierul și scrie conținutul
-            with open(file_path, 'w') as f:
-                f.write(content)
+            elif method==3:
+                if category=='FILE': #o singura operatie, nu mai verific op
+                    content=create_file(self.base_dir,param1,param2)#param1 e nume,param2 e content
+                    status_code=generate_code(method,content)
+                    response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare fisier', 'PARAM2': None}
 
-            response = {'message': 'File created successfully'}
-            self.send_response(client_address, 201, response)
+                elif category=='DIRECTORY':
+                    content=create_dir(param1)
+                    status_code=generate_code(method,content)
+
+                    response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare director', 'PARAM2': None}
+                    #decodificarea payload-ului
+
+
+            data=self.create_response(message,status_code)
 
         except json.JSONDecodeError:
-            response = {'error': 'Invalid JSON format'}
-            self.send_response(client_address, 400, response)
+           response_error = {'error': 'Invalid JSON format'}
 
+        self.send_response(client_address,data,response)
+
+
+
+    def create_response(self,request_message,request_code):
+
+        version=1
+        message_type=1
+        token_length=request_message.token_length
+        #piggybacked->momentan nu exista mesaj gol
+        if request_message.message_type==0: #request confirmabil
+            message_type=2 #tipul acknowledgment
+        elif request_message.message_type==1: # request non-confirmable
+            message_type=1
+
+        code=request_code
+        message_id=request_message.message_id
+        token=request_message.token
+        payload_marker = b'\xFF'
+
+
+        first_byte = (version << 6) | (message_type << 4) | token_length
+
+
+        print(code)
+        header = struct.pack("!BBH",
+                             first_byte,
+                             code,
+                             message_id)
+
+        if message_type==0:
+            message=header
+        else:
+            message=header+token+payload_marker
+
+        return message
 
 
 

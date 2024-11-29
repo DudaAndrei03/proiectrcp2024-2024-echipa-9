@@ -236,6 +236,66 @@ CoAp operates similarly to HTTP, where an endpoint playing the role of a client 
 
 This is an example of a CoAp interaction with a Confirmable Message and a Piggybacked Response, where the client requests a resource (the temperature) and the server replies in the same Acknowledgement Message with a succes code and the actual resource requested.
 
+## The structure for the client's request
+```
++-----+------------------------------------------------+--------+------+
+| No. | PAYLOAD                                        | METHOD | TYPE |
+|     +-----------+----------+------------+------------+        |      |
+|     | CATEGORY  | OP       | PARAM_1    | PARAM_2    |        |      |
++=====+===========+==========+============+============+========+======+
+| 1   | DIRECTORY | LIST     | -          | -          | GET    | CON  |
++-----+           +----------+------------+------------+--------+------+
+| 2   |           | CD       | [PATH]     | -          | POST   | CON  |
++-----+           +----------+------------+------------+--------+------+
+| 3   |           | RENAME   | [OLD_NAME] | [NEW_NAME] | POST   | CON  |
++-----+           +----------+------------+------------+--------+------+
+| 4   |           | CREATE   | [NAME]     | -          | PUT    | CON  |
++-----+           +----------+------------+------------+--------+------+
+| 5   |           | DELETE   | [NAME]     | -          | DELETE | CON  |
++-----+-----------+----------+------------+------------+--------+------+
+| 6   | FILE      | UPLOAD   | [NAME]     | [CONTENT]  | PUT    | CON  |
++-----+           +----------+------------+------------+--------+------+
+| 7   |           | DONWLOAD | [NAME]     | -          | GET    | CON  |
++-----+           +----------+------------+------------+--------+------+
+| 8   |           | RENAME   | [OLD_NAME] | [NEW_NAME] | POST   | CON  |
++-----+           +----------+------------+------------+--------+------+
+| 9   |           | MOVE     | [NAME]     | [NEW_PATH] | POST   | CON  |
++-----+           +----------+------------+------------+--------+------+
+| 10  |           | DELETE   | [NAME]     | -          | DELETE | CON  |
++-----+-----------+----------+------------+------------+--------+------+
+```
+
+## The structure for the server's response to the client
+
+```
++-----+--------------------------------------------+--------+------+
+| No. | PAYLOAD                                    | METHOD | TYPE |
+|     +-----------+----------+---------+-----------+        |      |
+|     | CATEGORY  | OP       | PARAM_1 | PARAM_2   |        |      |
++=====+===========+==========+=========+===========+========+======+
+| 1   | DIRECTORY | LIST     | [RESP]  | [CONTENT] | GET    | NON  |
++-----+           +----------+---------+-----------+--------+------+
+| 2   |           | CD       | [RESP]  | -         | POST   | NON  |
++-----+           +----------+---------+-----------+--------+------+
+| 3   |           | RENAME   | [RESP]  | -         | POST   | NON  |
++-----+           +----------+---------+-----------+--------+------+
+| 4   |           | CREATE   | [RESP]  | -         | PUT    | NON  |
++-----+           +----------+---------+-----------+--------+------+
+| 5   |           | DELETE   | [RESP]  | -         | DELETE | NON  |
++-----+-----------+----------+---------+-----------+--------+------+
+| 6   | FILE      | UPLOAD   | [RESP]  | -         | PUT    | NON  |
++-----+           +----------+---------+-----------+--------+------+
+| 7   |           | DONWLOAD | [RESP]  | [CONTENT] | GET    | NON  |
++-----+           +----------+---------+-----------+--------+------+
+| 8   |           | RENAME   | [RESP]  | -         | POST   | NON  |
++-----+           +----------+---------+-----------+--------+------+
+| 9   |           | MOVE     | [RESP]  | -         | POST   | NON  |
++-----+           +----------+---------+-----------+--------+------+
+| 10  |           | DELETE   | [RESP]  | -         | DELETE | NON  |
++-----+-----------+----------+---------+-----------+--------+------+
+```
+
+
 ## Application Structure
 
 ![image](https://github.com/user-attachments/assets/ac3670ba-b52b-4220-b66a-eb40ca16a451)

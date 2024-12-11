@@ -4,9 +4,7 @@ import sys
 import threading
 import json
 import os
-from distutils.file_util import move_file
-from idlelib.run import handle_tk_events
-from turtledemo.penrose import start
+
 
 from functions import read_file, rename_file, create_file, create_dir, generate_code, Methods, codeToDecimal, \
     create_directory,move_File

@@ -72,7 +72,7 @@ def update_file(folder_path,filename,txt,option):
 def read_file(folder_path,filename): # mergea inainte cu filename, am pus file_path la with open
     file_path = os.path.join(folder_path, filename)
     try:
-        with open(file_path,'rb') as file: #deschid in binar pt a putea trimite in retea->trebuie citit cu 'wb'
+        with open(file_path,'r') as file: #deschid in binar pt a putea trimite in retea->trebuie citit cu 'wb'
             content=file.read()
             return content
     except FileNotFoundError:

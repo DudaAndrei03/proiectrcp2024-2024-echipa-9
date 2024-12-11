@@ -4,10 +4,12 @@ import sys
 import threading
 import json
 import os
+from distutils.file_util import move_file
 from idlelib.run import handle_tk_events
 from turtledemo.penrose import start
 
-from functions import read_file, rename_file, create_file, create_dir, generate_code
+from functions import read_file, rename_file, create_file, create_dir, generate_code, Methods, codeToDecimal, \
+    create_directory,move_File
 
 """ Server : 
 
@@ -31,12 +33,6 @@ class PayloadMarkerMissingError(PayloadMarkerError):
 
 class EmptyPayloadWithMarkerError(PayloadMarkerError):
     """Raised when the payload marker is present, but the payload is empty."""
-
-
-
-
-
-
 
 
 
@@ -103,8 +99,9 @@ class CoAPServer:
         response_data = json.dumps(response).encode('utf-8')
 
         message+=response_data
-        # Trimite răspunsul clientulu
+        # Trimite răspunsul clientului
         self.server_socket.sendto(message, client_address)
+
 
     def run(self):
         print("Serverul este acum activ.")
@@ -151,7 +148,7 @@ class CoAPServer:
         message.token=content[4:token_end]#token length reprezinta o valoare binara de 4 biti
                                                        #secventa de 0-8 bytes ce trebuie redata in raspuns
 
-        #Momentan fara opituni,payload imediat dupa header
+        #Momentan fara optiuni,payload imediat dupa header
 
         message.payload_marker=content[token_end:token_end+1]#payload marker e un octet 0xFF
 
@@ -178,43 +175,88 @@ class CoAPServer:
                     #print("Message payload marker respects the format but the payload is empty!")
 
             #Deocodez JSON
-            request = json.loads(payload.decode('utf-8'))
+            request = json.loads(payload.decode('utf-8')) #Decodam inapoi payload-ul
+
             category = request.get('CATEGORY') #2 val-FILE sau DIR
             op = request.get('OP')
+
             param1=request.get('PARAM1')
             param2=request.get('PARAM2')
 
             method=message.code
-            if method==1: #GET
-                if category=='FILE': #pe get,fle singura operatie e download, nu mai verific
+            if method == 1: #GET
+                if category=='FILE':
+
                     content=read_file(self.base_dir,param1)
                     status_code=generate_code(method,content)
+
                     response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut fisier','PARAM2':content}
 
                 elif category=='DIRECTORY':
-                    content_dir=os.listdir(self.base_dir) #lista de string-uri ce reprezinta fisierele
-                    response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut director','PARAM2':content_dir}
 
-            elif method==2: #POST->urmeaza restul de implementari
+                    #Pe Get -> Directory nu s-a mai specificat singura operatie posibila de List,if in +
+
+                    content_dir=os.listdir(self.base_dir) #lista de string-uri ce reprezinta fisierele
+
+                    if not content_dir:
+                        status_code = codeToDecimal('4.04') # nu este nimic in director de trimis 404
+                    #verificam daca primim fisier sau director
+                    type_of_file = []
+
+                    for f in content_dir:
+                        full_path = os.path.join(self.base_dir,f)
+                        if os.path.isfile(full_path):
+                            type_of_file.append((f, 'FILE'))
+                        elif os.path.isdir(full_path):
+                            type_of_file.append((f, 'DIRECTORY'))
+
+                    response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut director','PARAM2':type_of_file}
+                    #Aici trebuie pus type_of_file in loc de content_dir
+
+            elif method == 2: #POST->urmeaza restul de implementari
+
                 if category=='FILE':
-                    if op=='RENAME':
-                        status=rename_file(param1,param2)
-                        status_code=generate_code(method,status)
+                    if op == 'RENAME':
+                        status = rename_file(self.base_dir,param1,param2)
+                        status_code = generate_code(method,status)
                         response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Redenumire',
                                     'PARAM2': None}
+                    if op == 'MOVE':
+                        path = param2
+                        #full_path_check = os.path.join(self.base_dir,param2)
 
-            elif method==3:
+                        full_path_to_move = os.path.join(self.base_dir,param1)
+                        full_path_location = os.path.join(self.base_dir,param2)
+
+                        #poate trebuie modificat self.base_dir cu param2 = path primit de la client
+                        if not os.path.isfile(full_path_to_move):
+                            status_code = codeToDecimal('4.04') # pt ca functia generate_code in apelul ei are si codeToDecimal
+                                                              #iar daca nu apelam functia, status_code va ramane cu valoarea de tip x.xx care nu poate fi trimisa mai departe
+                        else:
+                            #mutarea fisierului din path-ul dat prin param1 in path-ul dat prin param2
+                            move_File(full_path_to_move,full_path_location)
+                            status_code = codeToDecimal('2.05')
+                            response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Mutare Fisier', 'PARAM2': None}
+
+
+
+
+            elif method == 3:
+
                 if category=='FILE': #o singura operatie, nu mai verific op
                     content=create_file(self.base_dir,param1,param2)#param1 e nume,param2 e content
                     status_code=generate_code(method,content)
                     response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare fisier', 'PARAM2': None}
 
                 elif category=='DIRECTORY':
-                    content=create_dir(param1)
+                    full_path = os.path.join(self.base_dir,param2)
+                    content=create_directory(full_path,param1)
                     status_code=generate_code(method,content)
 
                     response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare director', 'PARAM2': None}
                     #decodificarea payload-ului
+
+
 
 
             data=self.create_response(message,status_code)
@@ -238,6 +280,7 @@ class CoAPServer:
             message_type=1
 
         code=request_code
+        #code = 4.04 =>
         message_id=request_message.message_id
         token=request_message.token
         payload_marker = b'\xFF'

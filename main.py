@@ -217,8 +217,8 @@ class CoAPServer:
                     if op == 'RENAME':
                         status = rename_file(self.base_dir,param1,param2)
                         status_code = generate_code(method,status)
-                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Redenumire',
-                                    'PARAM2': None}
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': f'Redenumire in {param1}',
+                                    'PARAM2': None}#parametrul 2 trebuie pus->el reprezinta noul nume
                     if op == 'MOVE':
                         path = param2
                         #full_path_check = os.path.join(self.base_dir,param2)
@@ -236,8 +236,12 @@ class CoAPServer:
                             status_code = codeToDecimal('2.05')
                             response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Mutare Fisier', 'PARAM2': None}
 
-
-
+                elif category=='DIRECTORY':
+                    if op == 'RENAME':
+                        status = rename_file(self.base_dir, param1, param2)
+                        status_code = generate_code(method, status)
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': f'Redenumire in {param2} ',
+                                    'PARAM2': None}  # parametrul 2 trebuie pus->el reprezinta noul nume
 
             elif method == 3:
 
@@ -247,8 +251,8 @@ class CoAPServer:
                     response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare fisier', 'PARAM2': None}
 
                 elif category=='DIRECTORY':
-                    full_path = os.path.join(self.base_dir,param2)
-                    content=create_directory(full_path,param1)
+                    #full_path = os.path.join(self.base_dir,param2)->de verificat
+                    content=create_directory(self.base_dir,param1)
                     status_code=generate_code(method,content)
 
                     response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare director', 'PARAM2': None}
@@ -262,6 +266,7 @@ class CoAPServer:
         except json.JSONDecodeError:
            response_error = {'error': 'Invalid JSON format'}
 
+
         self.send_response(client_address,data,response)
 
 
@@ -271,7 +276,7 @@ class CoAPServer:
         version=1
         message_type=1
         token_length=request_message.token_length
-        #piggybacked->momentan nu exista mesaj gol
+        #piggybacked->nu exista mesaj gol
         if request_message.message_type==0: #request confirmabil
             message_type=2 #tipul acknowledgment
         elif request_message.message_type==1: # request non-confirmable

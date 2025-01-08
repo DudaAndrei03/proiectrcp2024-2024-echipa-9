@@ -70,7 +70,7 @@ class CoAPClient:
         message_type = 1
         token_length = 4
         #-
-        code = 1
+        code = 2
         message_id = 16
         token = b'\xA1\xB2\xC3\xD4'
         payload_marker=b'\xFF'
@@ -88,10 +88,10 @@ class CoAPClient:
 
         file_content='Test create file'
         file_content_bytes=file_content.encode('utf-8')
-        data = json.dumps({'CATEGORY' : 'FILE',
-                           'OP' : 'DOWNLOAD',
-                            'PARAM1':'DIR_TEST_MAKEDIR/DIRECTOR2/DIRECTOR3/TESTDOWNLOAD.txt',
-                           'PARAM2':'DIR_TEST_MAKEDIR/DIRECTOR2'
+        data = json.dumps({'CATEGORY' : 'DIRECTORY',
+                           'OP' : 'RENAME',
+                            'PARAM1':'DIR_TEST_MAKEDIR/DIR_TEST_PENTRU_RENAME',
+                           'PARAM2':'banane'
                            }).encode('utf-8')
         #data->payload
         #converteste string-ul cu format standardizat de tip JSON catre bytes pentru a putea fi transmis la server

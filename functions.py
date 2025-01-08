@@ -99,6 +99,8 @@ def move_File(folder_path_old_location,folder_path_new_location):
     folder_path_new_location += f"/{filename}"
     create_file_for_move(folder_path_new_location,content)
     #delete ulterior al fisierului din folder_path_old_location
+    if os.path.exists(folder_path_old_location):
+        os.remove(folder_path_old_location)
 
 
 def create_dir(path):
@@ -163,8 +165,12 @@ def rename_file(folder_path,old_name, new_name):
         if not os.path.exists(old_name_path):
             return False
 
-        # Check if the destination file already exists
-        new_name_path=os.path.join(folder_path,new_name)
+        directory = os.path.dirname(old_name_path)
+
+        new_name_path=os.path.join(directory,new_name)
+
+        #new_name_path=os.path.join(folder_path,new_name)
+
         if os.path.exists(new_name_path) == False:
             os.rename(old_name_path, new_name_path)
             return True #nu a creat doar a modificat
@@ -174,6 +180,7 @@ def rename_file(folder_path,old_name, new_name):
         #codul 4.04 corespunde la una dintre cele 2 erori:
             #negasirea unui path valabil care sa contina old_name
             #incercarea redenumirii fisierului vechi cu un nume care este deja folosit(new_name)
+
 
 def create_directory(folder_path,dir_name):
     dir_full_path = os.path.join(folder_path,dir_name)

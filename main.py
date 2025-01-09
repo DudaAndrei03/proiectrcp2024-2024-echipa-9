@@ -272,14 +272,14 @@ class CoAPServer:
                         full_path=os.path.join(self.base_dir,param1)
                         status=delete_file(full_path)
                         status_code=generate_code(method,status)
-                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': f'{param1} sters cu succes', 'PARAM2': None}
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM_1': f'{param1} sters cu succes', 'PARAM2': None}
 
                 elif category == 'DIRECTORY':
                     if op == 'DELETE':
                         full_path=os.path.join(self.base_dir,param1)
                         status=delete_dir(full_path)
                         status_code=generate_code(method,status)
-                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': f'{param1} sters cu succes', 'PARAM2': None}
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM_1': f'{param1} sters cu succes', 'PARAM2': None}
 
 
             data=self.create_response(message,status_code)

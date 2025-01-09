@@ -67,10 +67,10 @@ class CoAPClient:
     def send_request(self,filename,content):
 
         version = 1#la << voi shifta 00000001
-        message_type = 1
+        message_type = 0
         token_length = 4
         #-
-        code = 2
+        code = 1
         message_id = 16
         token = b'\xA1\xB2\xC3\xD4'
         payload_marker=b'\xFF'
@@ -88,10 +88,10 @@ class CoAPClient:
 
         file_content='Test create file'
         file_content_bytes=file_content.encode('utf-8')
-        data = json.dumps({'CATEGORY' : 'FILE',
-                           'OP' : 'MOVE',
-                            'PARAM1':'DIR_TEST_MAKEDIR/banane2/fisier_test_upload.txt',
-                           'PARAM2':'DIR_TEST_MAKEDIR'
+        data = json.dumps({'CATEGORY' : 'DIRECTORY',
+                           'OP' : 'LIST',
+                            'PARAM_1':'DIR_TEST_MAKEDIR',
+                           'PARAM_2':'DIR_TEST_MAKEDIR'
                            }).encode('utf-8')
         #data->payload
         #converteste string-ul cu format standardizat de tip JSON catre bytes pentru a putea fi transmis la server

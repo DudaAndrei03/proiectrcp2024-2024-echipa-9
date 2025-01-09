@@ -46,7 +46,7 @@ class Message:
         self.payload_marker=None
 
 class CoAPServer:
-    def __init__(self, host='localhost', port=5683, base_dir='./uploads'):
+    def __init__(self, host='192.168.0.104', port=5683, base_dir='./uploads'):
         self.host = host
         self.port = port
         self.base_dir = base_dir
@@ -57,7 +57,7 @@ class CoAPServer:
 
         # Crează socket UDP
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.server_socket.bind((self.host, self.port))
+        self.server_socket.bind(('localhost', 5683))
         print(f"Serverul CoAP asculta pe {self.host}:{self.port}")
 
     def handle_request(self, data, client_address):
@@ -178,8 +178,8 @@ class CoAPServer:
             category = request.get('CATEGORY') #2 val-FILE sau DIR
             op = request.get('OP')
 
-            param1=request.get('PARAM1')
-            param2=request.get('PARAM2')
+            param1=request.get('PARAM_1')
+            param2=request.get('PARAM_2')
 
             method=message.code
             if method == 1: #GET
@@ -189,13 +189,15 @@ class CoAPServer:
                         content=read_file(self.base_dir,param1)
                         status_code=generate_code(method,content)
 
-                        response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut fisier','PARAM2':content}
+                        response={'CATEGORY':category, 'OP':op,'PARAM_1':'Continut fisier','PARAM_2':content}
 
                 elif category=='DIRECTORY':
 
                     if op == 'LIST':
 
-                        content_dir=os.listdir(self.base_dir) #lista de string-uri ce reprezinta fisierele
+                        path=os.path.join(self.base_dir,param1)
+                        content_dir=os.listdir(path) #lista de string-uri ce reprezinta fisierele
+
 
                         if not content_dir:
                             status_code = codeToDecimal('4.04') # nu este nimic in director de trimis 404
@@ -203,13 +205,14 @@ class CoAPServer:
                         type_of_file = []
 
                         for f in content_dir:
-                            full_path = os.path.join(self.base_dir,f)
+                            full_path = os.path.join(path,f)
                             if os.path.isfile(full_path):
                                 type_of_file.append((f, 'FILE'))
                             elif os.path.isdir(full_path):
                                 type_of_file.append((f, 'DIRECTORY'))
 
-                        response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut director','PARAM2':type_of_file}
+
+                        response={'CATEGORY':category, 'OP':op,'PARAM_1':f'In directorul {param1} se afla: ','PARAM_2':type_of_file}
                         status_code = codeToDecimal('2.05')
                         #Aici trebuie pus type_of_file in loc de content_dir
 
@@ -219,8 +222,8 @@ class CoAPServer:
                     if op == 'RENAME':
                         status = rename_file(self.base_dir,param1,param2)
                         status_code = generate_code(method,status)
-                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': f'Redenumire in {param1}',
-                                    'PARAM2': None}#parametrul 2 trebuie pus->el reprezinta noul nume
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM_1': f'Redenumire in {param1}',
+                                    'PARAM_2': None}#parametrul 2 trebuie pus->el reprezinta noul nume
                     if op == 'MOVE':
                         path = param2
                         #full_path_check = os.path.join(self.base_dir,param2)
@@ -236,14 +239,14 @@ class CoAPServer:
                             #mutarea fisierului din path-ul dat prin param1 in path-ul dat prin param2
                             move_File(full_path_to_move,full_path_location)
                             status_code = codeToDecimal('2.05')
-                            response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Mutare Fisier', 'PARAM2': None}
+                            response = {'CATEGORY': category, 'OP': op, 'PARAM_1': 'Mutare Fisier', 'PARAM_2': None}
 
                 elif category=='DIRECTORY':
                     if op == 'RENAME':
                         status = rename_file(self.base_dir, param1, param2)
                         status_code = generate_code(method, status)
-                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': f'Redenumire in {param2} ',
-                                    'PARAM2': None}  # parametrul 2 trebuie pus->el reprezinta noul nume
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM_1': f'Redenumire in {param2} ',
+                                    'PARAM_2': None}  # parametrul 2 trebuie pus->el reprezinta noul nume
 
             elif method == 3:
 
@@ -251,7 +254,7 @@ class CoAPServer:
                     if op == 'UPLOAD':
                         content=create_file(self.base_dir,param1,param2)#param1 e nume,param2 e content
                         status_code=generate_code(method,content)
-                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare fisier', 'PARAM2': None}
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM_1': 'Creare fisier', 'PARAM_2': None}
 
                 elif category=='DIRECTORY':
                     if op == 'CREATE':
@@ -259,7 +262,7 @@ class CoAPServer:
                         content=create_directory(self.base_dir,param1)
                         status_code=generate_code(method,content)
 
-                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare director', 'PARAM2': None}
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM_1': 'Creare director', 'PARAM_2': None}
                         #decodificarea payload-ului
 
             elif method == 4:
@@ -292,7 +295,7 @@ class CoAPServer:
     def create_response(self,request_message,request_code):
 
         version=1
-        message_type=1
+        message_type=1 #val default
         token_length=request_message.token_length
         #piggybacked->nu exista mesaj gol
         if request_message.message_type==0: #request confirmabil

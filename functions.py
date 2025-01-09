@@ -1,4 +1,7 @@
 import os
+import shutil
+from argparse import MetavarTypeHelpFormatter
+from dbm import error
 
 from enum import Enum
 
@@ -8,8 +11,7 @@ class Methods(Enum):
     PUT = 3
     DELETE = 4
 
-def delete_file(folder_path,filename):
-    file_path = os.path.join(folder_path,filename)
+def delete_file(file_path):
 
     if os.path.exists(file_path):
         try:
@@ -22,6 +24,22 @@ def delete_file(folder_path,filename):
     else:
         print(f"The {file_path} does not exist.")
         return False
+
+def delete_dir(file_path):
+    if os.path.exists(file_path):
+        try:
+            shutil.rmtree(file_path)
+            print(f"Deleted file:{file_path}")
+            return True
+        except OSError as error:
+            print(f"Unable to delete:{file_path} . {error}")
+
+    else:
+        print(f"The {file_path} does not exist.")
+        return False
+
+
+
 
 def create_file(folder_path,filename,content):
     file_path = os.path.join(folder_path,filename)
@@ -113,7 +131,7 @@ def generate_code(method,content):
 
     if method_enum == Methods.GET:
         if content: #succes
-            code = codeToDecimal('2.05')
+            code = codeToDecimal('2.05')#cod pentru download
         else:
             code = codeToDecimal('4.04')
     if method_enum == Methods.POST:
@@ -126,6 +144,11 @@ def generate_code(method,content):
             code = codeToDecimal('2.04') #creat
         else:
             code= codeToDecimal('4.04')
+    if method_enum == Methods.DELETE:
+        if content:
+            code = codeToDecimal('2.02')
+        else:
+            code = codeToDecimal('4.04')
     return code
 
 
@@ -190,7 +213,8 @@ def create_directory(folder_path,dir_name):
         return False
 
     try:
-        os.makedirs(dir_full_path, exist_ok=True)  # previne eroare daca directorul exista deja
+        os.makedirs(dir_full_path, exist_ok=True) # previne eroare daca directorul exista deja
+        os.chmod(dir_full_path,0o777)
         print(f"Directory '{dir_full_path}' created successfully.")
         return True
     except Exception as e:

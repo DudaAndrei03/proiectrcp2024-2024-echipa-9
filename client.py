@@ -88,10 +88,10 @@ class CoAPClient:
 
         file_content='Test create file'
         file_content_bytes=file_content.encode('utf-8')
-        data = json.dumps({'CATEGORY' : 'DIRECTORY',
-                           'OP' : 'RENAME',
-                            'PARAM1':'DIR_TEST_MAKEDIR/DIR_TEST_PENTRU_RENAME',
-                           'PARAM2':'banane'
+        data = json.dumps({'CATEGORY' : 'FILE',
+                           'OP' : 'MOVE',
+                            'PARAM1':'DIR_TEST_MAKEDIR/banane2/fisier_test_upload.txt',
+                           'PARAM2':'DIR_TEST_MAKEDIR'
                            }).encode('utf-8')
         #data->payload
         #converteste string-ul cu format standardizat de tip JSON catre bytes pentru a putea fi transmis la server

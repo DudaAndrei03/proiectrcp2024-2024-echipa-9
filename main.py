@@ -7,7 +7,7 @@ import os
 
 
 from functions import read_file, rename_file, create_file, create_dir, generate_code, Methods, codeToDecimal, \
-    create_directory,move_File
+    create_directory, move_File, delete_file,delete_dir
 
 """ Server : 
 
@@ -184,32 +184,34 @@ class CoAPServer:
             method=message.code
             if method == 1: #GET
                 if category=='FILE':
+                    if op == 'DOWNLOAD':
 
-                    content=read_file(self.base_dir,param1)
-                    status_code=generate_code(method,content)
+                        content=read_file(self.base_dir,param1)
+                        status_code=generate_code(method,content)
 
-                    response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut fisier','PARAM2':content}
+                        response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut fisier','PARAM2':content}
 
                 elif category=='DIRECTORY':
 
-                    #Pe Get -> Directory nu s-a mai specificat singura operatie posibila de List,if in +
+                    if op == 'LIST':
 
-                    content_dir=os.listdir(self.base_dir) #lista de string-uri ce reprezinta fisierele
+                        content_dir=os.listdir(self.base_dir) #lista de string-uri ce reprezinta fisierele
 
-                    if not content_dir:
-                        status_code = codeToDecimal('4.04') # nu este nimic in director de trimis 404
-                    #verificam daca primim fisier sau director
-                    type_of_file = []
+                        if not content_dir:
+                            status_code = codeToDecimal('4.04') # nu este nimic in director de trimis 404
+                        #verificam daca primim fisier sau director
+                        type_of_file = []
 
-                    for f in content_dir:
-                        full_path = os.path.join(self.base_dir,f)
-                        if os.path.isfile(full_path):
-                            type_of_file.append((f, 'FILE'))
-                        elif os.path.isdir(full_path):
-                            type_of_file.append((f, 'DIRECTORY'))
+                        for f in content_dir:
+                            full_path = os.path.join(self.base_dir,f)
+                            if os.path.isfile(full_path):
+                                type_of_file.append((f, 'FILE'))
+                            elif os.path.isdir(full_path):
+                                type_of_file.append((f, 'DIRECTORY'))
 
-                    response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut director','PARAM2':type_of_file}
-                    #Aici trebuie pus type_of_file in loc de content_dir
+                        response={'CATEGORY':category, 'OP':op,'PARAM1':'Continut director','PARAM2':type_of_file}
+                        status_code = codeToDecimal('2.05')
+                        #Aici trebuie pus type_of_file in loc de content_dir
 
             elif method == 2: #POST->urmeaza restul de implementari
 
@@ -246,19 +248,35 @@ class CoAPServer:
             elif method == 3:
 
                 if category=='FILE': #o singura operatie, nu mai verific op
-                    content=create_file(self.base_dir,param1,param2)#param1 e nume,param2 e content
-                    status_code=generate_code(method,content)
-                    response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare fisier', 'PARAM2': None}
+                    if op == 'UPLOAD':
+                        content=create_file(self.base_dir,param1,param2)#param1 e nume,param2 e content
+                        status_code=generate_code(method,content)
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare fisier', 'PARAM2': None}
 
                 elif category=='DIRECTORY':
-                    #full_path = os.path.join(self.base_dir,param2)->de verificat
-                    content=create_directory(self.base_dir,param1)
-                    status_code=generate_code(method,content)
+                    if op == 'CREATE':
+                        #full_path = os.path.join(self.base_dir,param2)->de verificat
+                        content=create_directory(self.base_dir,param1)
+                        status_code=generate_code(method,content)
 
-                    response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare director', 'PARAM2': None}
-                    #decodificarea payload-ului
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': 'Creare director', 'PARAM2': None}
+                        #decodificarea payload-ului
 
+            elif method == 4:
 
+                if category == 'FILE':
+                    if op == 'DELETE':
+                        full_path=os.path.join(self.base_dir,param1)
+                        status=delete_file(full_path)
+                        status_code=generate_code(method,status)
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': f'{param1} sters cu succes', 'PARAM2': None}
+
+                elif category == 'DIRECTORY':
+                    if op == 'DELETE':
+                        full_path=os.path.join(self.base_dir,param1)
+                        status=delete_dir(full_path)
+                        status_code=generate_code(method,status)
+                        response = {'CATEGORY': category, 'OP': op, 'PARAM1': f'{param1} sters cu succes', 'PARAM2': None}
 
 
             data=self.create_response(message,status_code)

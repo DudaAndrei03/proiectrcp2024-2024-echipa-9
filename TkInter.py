@@ -29,12 +29,21 @@ class App:
         )
         self.button_browse.pack(pady=5)
 
-        # Treeview pentru afișarea fișierelor și directoarelor
+        # Treeview pentru afisarea fișierelor si directoarelor
         self.tree = ttk.Treeview(self.vertical_frame, selectmode="browse")
         self.tree.pack(expand=True, fill=BOTH, pady=10)
-        self.tree.bind("<<TreeviewOpen>>", self.expand_tree)  # Când utilizatorul deschide un nod
+        self.tree.bind("<<TreeviewOpen>>", self.expand_tree)  # Cand utilizatorul deschide un nod
 
-        # Buton pentru deschiderea fișierului selectat
+        # Buton pentru Refresh
+        self.button_refresh = ttk.Button(
+            self.vertical_frame,
+            text="Refresh",
+            bootstyle=PRIMARY,
+            command=self.refresh_tree
+        )
+        self.button_refresh.pack(pady=5)
+
+        # Buton pentru deschiderea fisierului selectat
         self.button_open_file = ttk.Button(
             self.vertical_frame,
             text="Open File",
@@ -57,6 +66,15 @@ class App:
             self.tree.delete(*self.tree.get_children())
             self.insert_tree_nodes("", folder_selected)
 
+    def refresh_tree(self):
+        """Reîncarcă conținutul treeview folosind folderul curent."""
+        current_folder = self.input_text_rootfolder.get()
+        if os.path.isdir(current_folder):
+            self.tree.delete(*self.tree.get_children())
+            self.insert_tree_nodes("", current_folder)
+        else:
+            messagebox.showerror("Error", "Invalid folder path! Please browse a valid folder.")
+
     def insert_tree_nodes(self, parent, path):
         """Adaugă noduri pentru directoare și fișiere."""
         try:
@@ -64,7 +82,7 @@ class App:
                 item_path = os.path.join(path, item)
                 if os.path.isdir(item_path):
                     node = self.tree.insert(parent, "end", text=item, values=[item_path], open=False)
-                    self.tree.insert(node, "end")  # Adaugăm un nod fals pentru expandare
+                    self.tree.insert(node, "end")  # Adaugam un nod fals pentru expandare
                 else:
                     self.tree.insert(parent, "end", text=item, values=[item_path])
         except PermissionError:
@@ -101,6 +119,7 @@ class App:
 
 
 # Inițializare aplicație
-app = ttk.Window(themename="darkly")
-App(app)
-app.mainloop()
+if __name__ == '__main__':
+    app = ttk.Window(themename="darkly")
+    App(app)
+    app.mainloop()

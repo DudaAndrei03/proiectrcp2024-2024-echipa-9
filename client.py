@@ -112,4 +112,3 @@ class CoAPClient:
 if __name__ == '__main__':
     client = CoAPClient()
     client.send_request("test.txt", "Acest mesaj este trimis de la client.")
-

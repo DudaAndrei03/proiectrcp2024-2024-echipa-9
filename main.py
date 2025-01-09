@@ -4,7 +4,7 @@ import sys
 import threading
 import json
 import os
-
+from TkInter import *
 
 from functions import read_file, rename_file, create_file, create_dir, generate_code, Methods, codeToDecimal, \
     create_directory, move_File, delete_file,delete_dir
@@ -105,6 +105,7 @@ class CoAPServer:
         print("Serverul este acum activ.")
         id = 0
         clients = []
+
         while True:
             # Așteaptă cereri
             data, client_address = self.server_socket.recvfrom(1024)
@@ -331,5 +332,16 @@ class CoAPServer:
 #un singur thread main
 if __name__ == '__main__':
     server = CoAPServer()
-    server.run()
+    #server.run()
+    
+    server_thread = threading.Thread(target=server.run)
+    server_thread.daemon = True  # Asiguram închiderea thread-ului odată cu programul principal prin setarea threadului ca daemon
+    server_thread.start()
+
+    # Pornim GUI-ul
+    app = ttk.Window(themename="darkly")
+    App(app)
+    app.mainloop()
+
+
 
